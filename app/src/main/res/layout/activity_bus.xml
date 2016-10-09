@@ -15,8 +15,8 @@
     <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="申请相机权限"
-            android:id="@+id/btn_permission"
+            android:text="send event"
+            android:id="@+id/btn_send"
     />
 
 </LinearLayout>
