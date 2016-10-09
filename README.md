@@ -60,7 +60,7 @@ RxBroadCastManager send:: scream ,onReceive is MainThraed=false
 ```
 
 
-# 使用RxPerMissions
+## 使用RxPerMissions
 
 
 ```
@@ -90,7 +90,7 @@ RxBroadCastManager send:: scream ,onReceive is MainThraed=false
 ```
 
 
-# 使用RxBus
+## 使用RxBus
 
 ```
 
