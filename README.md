@@ -1,6 +1,6 @@
 # RxComponent
 
-借用RxJava实现，RxBroadCast，RxBus，RxPerMission。
+借用RxJava实现，RxBroadCast，RxBus，RxPermission。
 
 三个组件的git地址：
 
@@ -60,7 +60,7 @@ RxBroadCastManager send:: scream ,onReceive is MainThraed=false
 ```
 
 
-## 使用RxPerMissions
+## 使用RxPermissions
 
 
 ```
