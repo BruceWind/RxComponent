@@ -21,6 +21,7 @@
 
         <activity android:name=".RxPermissionActivity"  />
         <activity android:name=".RxBusActivity"  />
+        <activity android:name=".RxBroadCastActivity"  />
 
          <!--RxPermission调用-->
         <activity android:name="com.androidyuan.rxpermissions.PermissionReqActivity"

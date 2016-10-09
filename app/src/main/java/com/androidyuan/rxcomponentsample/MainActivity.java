@@ -23,14 +23,14 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.view_rxbroadcst).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                to(RxBroadCastActivity.class);
             }
         });
 
         findViewById(R.id.view_rxbus).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                to(RxBusActivity.class);
             }
         });
 
