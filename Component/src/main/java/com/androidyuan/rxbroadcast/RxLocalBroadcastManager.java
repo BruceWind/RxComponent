@@ -1,51 +1,57 @@
 package com.androidyuan.rxbroadcast;
 
+import android.content.Context;
+import android.content.Intent;
 import android.content.IntentFilter;
 import android.text.TextUtils;
 import android.util.SparseArray;
-import com.androidyuan.rxbroadcast.component.RxBroadCastReceiver;
-import rx.Observable;
-import rx.Subscription;
-import rx.subscriptions.CompositeSubscription;
+
+import com.androidyuan.rxbroadcast.component.RxBroadcastReceiver;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+
+import rx.Observable;
+import rx.Subscription;
+import rx.subscriptions.CompositeSubscription;
 
 /**
  * Created by wei on 16-9-10.
  * <p>
  * 高度模拟 LocalBroadCastManager 的用法 同时解决LocalBroadcast多次注册带来的bug
  */
-public class RxLocalBroadCastManager {
+public class RxLocalBroadcastManager {
 
-    private static RxLocalBroadCastManager instance;
+    private static RxLocalBroadcastManager instance;
 
-    //use SparseArray,because is high performance
-    SparseArray<List<RxBroadCastReceiver>> mSparseArrOnBroadCastReveive;
+    private final Context mAppContext;
+
+
+    SparseArray<List<RxBroadcastReceiver>> mSparseArrOnBroadCastReveive;
     CompositeSubscription mCompositeSubscription;
 
-    private RxLocalBroadCastManager() {
+    private RxLocalBroadcastManager(Context context) {
 
+        this.mAppContext=context.getApplicationContext();
         mSparseArrOnBroadCastReveive = new SparseArray<>();
         mCompositeSubscription = new CompositeSubscription();
     }
 
-
-    public static RxLocalBroadCastManager getInstance() {
+    public static RxLocalBroadcastManager getInstance(Context context) {
 
         if (instance == null) {
-            instance = new RxLocalBroadCastManager();
+            instance = new RxLocalBroadcastManager(context);
         }
         return instance;
     }
 
 
-    private synchronized void putRecevier(String filter, RxBroadCastReceiver broadCastReveive) {
+    private synchronized void putRecevier(String filter, RxBroadcastReceiver broadCastReveive) {
 
         if (!TextUtils.isEmpty(filter) && broadCastReveive != null) {
 
-            List<RxBroadCastReceiver> list = new ArrayList<>();
+            List<RxBroadcastReceiver> list = new ArrayList<>();
             if (isHaveKey(filter)) {
                 list = mSparseArrOnBroadCastReveive.get(filter.hashCode());
             }
@@ -58,6 +64,7 @@ public class RxLocalBroadCastManager {
                 mSparseArrOnBroadCastReveive.put(filter.hashCode(), list);
             }
         }
+
     }
 
 
@@ -90,21 +97,26 @@ public class RxLocalBroadCastManager {
      * 不带线程切换 功能
      * action的触发会在发送的observable所在线程线程执行
      *
-     * @param filter
-     * @param obj
+     * @param intent
      */
-    public void sendBroadcast(String filter, Object obj) {
+    public void sendBroadcast(Intent intent) {
 
-        if (TextUtils.isEmpty(filter) || obj == null)
+        if(intent==null)
+            return;
+
+
+        String filter=intent.getAction();
+
+        if (TextUtils.isEmpty(filter))
             return;
 
         if (isHaveKey(filter)) {//设计的 就像  广播一样 发送出来 如果没有人接受 就丢弃了
 
-            List<RxBroadCastReceiver> list = mSparseArrOnBroadCastReveive.get(filter.hashCode());
+            List<RxBroadcastReceiver> list = mSparseArrOnBroadCastReveive.get(filter.hashCode());
 
-            for (RxBroadCastReceiver onEv : list) {
+            for (RxBroadcastReceiver onEv : list) {
 
-                Subscription sbus = onEv.send(Observable.just(obj));
+                Subscription sbus = onEv.send(mAppContext,Observable.just(intent));
 
                 // Log.d("on send ,isUnsubscribed", sbus.isUnsubscribed() + "");
             }
@@ -112,12 +124,12 @@ public class RxLocalBroadCastManager {
     }
 
     //自动容错 防止多次 registerReceive
-    public void registerReceiver(RxBroadCastReceiver rxBroadCastReceiver, IntentFilter filters) {
+    public void registerReceiver(RxBroadcastReceiver rxBroadcastReceiver, IntentFilter filters) {
 
-        if (filters != null && rxBroadCastReceiver != null) {
+        if (filters != null && rxBroadcastReceiver != null) {
             Iterator<String> iterator = filters.actionsIterator();
             if (iterator.hasNext()) {
-                putRecevier(iterator.next(), rxBroadCastReceiver);
+                putRecevier(iterator.next(), rxBroadcastReceiver);
             }
         }
     }
@@ -126,19 +138,19 @@ public class RxLocalBroadCastManager {
     /**
      * 解绑
      *
-     * @param rxBroadCastReceiver
+     * @param rxBroadcastReceiver
      */
-    public void unregisterReceiver(RxBroadCastReceiver rxBroadCastReceiver) {
+    public void unregisterReceiver(RxBroadcastReceiver rxBroadcastReceiver) {
 
-        if (rxBroadCastReceiver == null)
+        if (rxBroadcastReceiver == null)
             return;
 
         for (int i = 0; i < mSparseArrOnBroadCastReveive.size(); i++) {
             int key = mSparseArrOnBroadCastReveive.keyAt(i);
             // get the object by the key.
-            List<RxBroadCastReceiver> list = mSparseArrOnBroadCastReveive.get(key);
-            if (list.contains(rxBroadCastReceiver)) {
-                list.remove(rxBroadCastReceiver);
+            List<RxBroadcastReceiver> list = mSparseArrOnBroadCastReveive.get(key);
+            if (list.contains(rxBroadcastReceiver)) {
+                list.remove(rxBroadcastReceiver);
             }
         }
     }

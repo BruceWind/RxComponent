@@ -1,19 +1,40 @@
 package com.androidyuan.rxcomponentsample;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import com.androidyuan.rxbroadcast.RxLocalBroadCastManager;
-import com.androidyuan.rxbroadcast.component.RxBroadCastReceiver;
-import com.androidyuan.rxbroadcast.component.RxBroadCastReceiverBackground;
+import com.androidyuan.rxbroadcast.RxLocalBroadcastManager;
+import com.androidyuan.rxbroadcast.component.RxBroadcastReceiver;
+import com.androidyuan.rxbroadcast.component.RxBroadcastReceiverBackground;
 import com.androidyuan.rxbroadcast.component.RxOnReceive;
 
-public class RxBroadCastActivity extends AppCompatActivity implements RxOnReceive {
+public class RxBroadCastActivity extends AppCompatActivity {
+    /**
+     * 测试发现 多次 commit 都没有收到多条 解决 使用　LocalBroadCastManager　时带来的问题
+     */
+    RxBroadcastReceiver broadCastReceiverAsync = new RxBroadcastReceiver() {
+        @SuppressLint("LongLogTag")
+        @Override
+        public void onReceive(Context context, Intent intent) {
 
-    RxBroadCastReceiver broadCastReceiverAsync = new RxBroadCastReceiver(this);
-    RxBroadCastReceiver broadCastReceiverback = new RxBroadCastReceiverBackground(this);
+            Log.d("RxLocalBroadCastManager send:",
+                    "" + intent.getAction() + " ,onReceive is MainThraed=" + isMainTread());
+        }
+    };
+    RxBroadcastReceiver broadCastReceiverback = new RxBroadcastReceiverBackground() {
+        @SuppressLint("LongLogTag")
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            Log.d("RxLocalBroadCastManager send:",
+                    "" + intent.getAction() + " ,onReceive is MainThraed=" + isMainTread());
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,32 +42,24 @@ public class RxBroadCastActivity extends AppCompatActivity implements RxOnReceiv
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_broadcast);
 
-        broadCastReceiverAsync.putFilter("testthread");
-        broadCastReceiverAsync.commit();
+        IntentFilter intentFilters=new IntentFilter();
+        intentFilters.addAction("testthread");
+        RxLocalBroadcastManager.getInstance(this).registerReceiver(broadCastReceiverback,intentFilters);
 
-        broadCastReceiverback.putFilter("testthread");
-        broadCastReceiverback.commit();
+
         //the test repeated registration.
-        broadCastReceiverback.commit();
-        broadCastReceiverback.commit();
-        broadCastReceiverback.commit();
+        RxLocalBroadcastManager.getInstance(this).registerReceiver(broadCastReceiverAsync,intentFilters);
+        RxLocalBroadcastManager.getInstance(this).registerReceiver(broadCastReceiverAsync,intentFilters);
+        RxLocalBroadcastManager.getInstance(this).registerReceiver(broadCastReceiverAsync,intentFilters);
 
-        RxLocalBroadCastManager.getInstance().sendBroadcast("testthread", "scream");
+        RxLocalBroadcastManager.getInstance(this).sendBroadcast(new Intent("testthread"));
 
 
     }
 
     @SuppressLint("LongLogTag")
 
-    /**
-     * 测试发现 多次 commit 都没有收到多条 解决 使用　LocalBroadCastManager　时带来的问题
-     */
-    @Override
-    public void call(Object o) {
 
-        Log.d("RxLocalBroadCastManager send:",
-                "" + o + " ,onReceive is MainThraed=" + isMainTread());
-    }
 
     private boolean isMainTread() {
 
@@ -60,7 +73,7 @@ public class RxBroadCastActivity extends AppCompatActivity implements RxOnReceiv
         super.onDestroy();
 
 
-        broadCastReceiverAsync.unRegister();
-        broadCastReceiverback.unRegister();
+        RxLocalBroadcastManager.getInstance(this).unregisterReceiver(broadCastReceiverAsync);
+        RxLocalBroadcastManager.getInstance(this).unregisterReceiver(broadCastReceiverback);
     }
 }
