@@ -31,7 +31,7 @@ dependencies {
 
 //task to delete the old jar
 task deleteOldJar(type: Delete) {
-    delete 'release/librtmp.jar'
+    delete 'release/rxcomponent.jar'
 }
 
 //task to export contents as jar
@@ -40,7 +40,7 @@ task exportJar(type: Copy) {
     into('release/')
     include('classes.jar')
     ///Rename the jar
-    rename('classes.jar', 'librtmp.jar')
+    rename('classes.jar', 'rxcomponent.jar')
 }
 
 exportJar.dependsOn(deleteOldJar, build)
